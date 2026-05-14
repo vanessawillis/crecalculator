@@ -2,35 +2,38 @@
 <OfficeApp
   xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
   xsi:type="MailApp">
 
-  <Id>8d1e4f7a-1111-4f21-9b71-123456789abc</Id>
+  <Id>7A3F9D1E-6C42-4F88-9B27-9D8E4E62C901</Id>
   <Version>1.0.0.0</Version>
   <ProviderName>TSG National</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="CRE Calculator" />
+  <Description DefaultValue="Commercial real estate calculator tools." />
+  <IconUrl DefaultValue="https://vanessawillis.github.io/crecalculator/icon-80.png" />
+  <HighResolutionIconUrl DefaultValue="https://vanessawillis.github.io/crecalculator/icon-80.png" />
+  <SupportUrl DefaultValue="https://tsgnational.com" />
 
-  <DisplayName DefaultValue="CRE Calculator"/>
-  <Description DefaultValue="Commercial real estate calculator tools."/>
-
-  <IconUrl DefaultValue="https://vanessawillis.github.io/crecalculator/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://vanessawillis.github.io/crecalculator/icon-80.png"/>
-  <SupportUrl DefaultValue="https://vanessawillis.github.io/crecalculator/"/>
+  <AppDomains>
+    <AppDomain>vanessawillis.github.io</AppDomain>
+  </AppDomains>
 
   <Hosts>
-    <Host Name="Mailbox"/>
+    <Host Name="Mailbox" />
   </Hosts>
 
   <Requirements>
     <Sets>
-      <Set Name="Mailbox" MinVersion="1.1"/>
+      <Set Name="Mailbox" MinVersion="1.1" />
     </Sets>
   </Requirements>
 
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://vanessawillis.github.io/crecalculator/"/>
-        <RequestedHeight>650</RequestedHeight>
+        <SourceLocation DefaultValue="https://vanessawillis.github.io/crecalculator/index.html" />
+        <RequestedHeight>900</RequestedHeight>
       </DesktopSettings>
     </Form>
   </FormSettings>
@@ -38,7 +41,7 @@
   <Permissions>ReadItem</Permissions>
 
   <Rule xsi:type="RuleCollection" Mode="Or">
-    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read" />
   </Rule>
 
   <DisableEntityHighlighting>false</DisableEntityHighlighting>
