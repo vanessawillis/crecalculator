@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TSG — CRE Calculator</title>
+  <style>
+    /* ============================================================
+       CSS VARIABLES & RESET
+    ============================================================ */
+    :root {
+      --navy:      #074A75;
+      --orange:    #F47D48;
+      --white:     #FFFFFF;
+      --stone:     #bab3ad;
+      --bg:        #f4f2f0;
+      --surface:   #FFFFFF;
+      --border:    #ddd8d3;
+      --text:      #111111;
+      --muted:     #6b6460;
+      --error:     #c0392b;
+      --radius:    3px;
+      --font-mono: 'Courier New', Courier, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    /* ============================================================
+       HEADER
+    ============================================================ */
+    header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 3px solid var(--orange);
+    }
+
+    .header-logo { display: flex; align-items: center; gap: 14px; }
+
+    .logo-mark {
+      width: 34px; height: 34px;
+      background: var(--orange);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Georgia', serif;
+      font-weight: bold; font-size: 14px;
+      color: var(--white); letter-spacing: 0.04em; flex-shrink: 0;
+    }
+
+    .header-title {
+      font-size: 13px; letter-spacing: 0.12em;
+      text-transform: uppercase; font-family: 'Georgia', serif; color: var(--white);
+    }
+
+    .header-sub {
+      font-size: 11px; letter-spacing: 0.06em;
+      color: var(--stone); text-transform: uppercase;
+    }
+
+    /* ============================================================
+       MAIN LAYOUT
+    ============================================================ */
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* ============================================================
+       SELECTOR
+    ============================================================ */
+    .selector-section { margin-bottom: 36px; }
+
+    .selector-label {
+      display: block; font-size: 11px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 8px; font-family: 'Georgia', serif;
+    }
+
+    .selector-wrap { position: relative; }
+
+    select#calcSelect {
+      width: 100%; padding: 14px 44px 14px 16px;
+      font-size: 15px; font-family: 'Georgia', serif;
+      color: var(--text); background: var(--surface);
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      appearance: none; cursor: pointer; outline: none;
+      transition: border-color 0.15s;
+    }
+
+    select#calcSelect:focus { border-color: var(--navy); }
+
+    .selector-arrow {
+      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+      width: 0; height: 0;
+      border-left: 5px solid transparent; border-right: 5px solid transparent;
+      border-top: 6px solid var(--navy); pointer-events: none;
+    }
+
+    /* ============================================================
+       CALCULATOR CARD
+    ============================================================ */
+    .calc-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      animation: fadeIn 0.18s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .calc-header {
+      background: var(--navy); color: var(--white);
+      padding: 16px 24px; display: flex; align-items: baseline; gap: 12px;
+    }
+
+    .calc-number {
+      font-size: 11px; letter-spacing: 0.12em;
+      color: var(--orange); text-transform: uppercase; flex-shrink: 0;
+    }
+
+    .calc-name { font-size: 17px; letter-spacing: 0.01em; }
+
+    .calc-body { padding: 28px 24px; }
+
+    /* ============================================================
+       FORM FIELDS
+    ============================================================ */
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px 28px;
+    }
+
+    .field-grid.single { grid-template-columns: 1fr; }
+    .field-grid.three  { grid-template-columns: 1fr 1fr 1fr; }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field.full-width { grid-column: 1 / -1; }
+
+    label {
+      font-size: 11px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted);
+      font-family: 'Georgia', serif;
+    }
+
+    .helper {
+      font-size: 11px; color: var(--stone);
+      margin-top: 2px; font-style: italic; font-family: 'Georgia', serif;
+    }
+
+    input[type="number"],
+    select.field-select {
+      padding: 10px 12px; font-size: 15px;
+      font-family: var(--font-mono); color: var(--text);
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: var(--radius); outline: none;
+      transition: border-color 0.15s; width: 100%;
+    }
+
+    input[type="number"]:focus,
+    select.field-select:focus { border-color: var(--navy); background: var(--white); }
+
+    input[type="number"]::placeholder { color: var(--stone); }
+
+    .field-section-label {
+      grid-column: 1 / -1;
+      font-size: 10px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--orange);
+      padding-top: 8px; border-top: 1px solid var(--border);
+      font-family: 'Georgia', serif;
+    }
+
+    /* Toggle */
+    .toggle-group {
+      display: flex;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+
+    .toggle-group label {
+      flex: 1; text-align: center; padding: 9px 6px;
+      font-size: 12px; letter-spacing: 0.08em; cursor: pointer;
+      text-transform: uppercase; color: var(--muted); background: var(--bg);
+      transition: background 0.12s, color 0.12s;
+    }
+
+    .toggle-group input[type="radio"] { display: none; }
+    .toggle-group input[type="radio"]:checked + label { background: var(--navy); color: var(--white); }
+
+    /* ============================================================
+       BUTTONS
+    ============================================================ */
+    .btn-row { margin-top: 28px; }
+
+    .btn-calc {
+      padding: 12px 36px; background: var(--orange); color: var(--white);
+      border: none; border-radius: var(--radius);
+      font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+      font-family: 'Georgia', serif; cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-calc:hover  { background: #e06830; }
+    .btn-calc:active { transform: scale(0.98); }
+
+    .btn-clear {
+      padding: 12px 20px; background: transparent; color: var(--muted);
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+      font-family: 'Georgia', serif; cursor: pointer; margin-left: 10px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-clear:hover { border-color: var(--navy); color: var(--navy); }
+
+    /* ============================================================
+       ERROR
+    ============================================================ */
+    .error-box {
+      background: #fdf0ee; border: 1.5px solid #e8b5ae;
+      border-radius: var(--radius); padding: 12px 16px;
+      color: var(--error); font-size: 13px; margin-top: 20px; display: none;
+    }
+    .error-box.visible { display: block; }
+
+    /* ============================================================
+       RESULT BOX
+    ============================================================ */
+    .result-box {
+      margin-top: 28px; border: 1.5px solid var(--navy);
+      border-radius: var(--radius); overflow: hidden;
+      display: none; animation: fadeIn 0.2s ease;
+    }
+    .result-box.visible { display: block; }
+
+    .result-header {
+      background: var(--navy); color: var(--white);
+      padding: 10px 20px; font-size: 11px; letter-spacing: 0.14em;
+      text-transform: uppercase; display: flex;
+      justify-content: space-between; align-items: center;
+    }
+
+    .result-body { padding: 24px 20px; background: #f8f6f4; }
+
+    .result-rows { display: flex; flex-direction: column; gap: 0; margin-bottom: 20px; }
+
+    .result-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 9px 0; border-bottom: 1px solid var(--border);
+    }
+    .result-row:last-child { border-bottom: none; }
+
+    .result-section-head {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--orange); padding: 14px 0 4px;
+      border-bottom: none;
+    }
+
+    .result-row.primary .result-label { font-size: 13px; font-weight: bold; color: var(--navy); }
+    .result-row.primary .result-value { font-size: 22px; font-family: var(--font-mono); color: var(--navy); font-weight: bold; }
+
+    .result-label { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+    .result-value { font-size: 17px; font-family: var(--font-mono); color: var(--text); text-align: right; }
+
+    .formula-block {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 16px;
+    }
+
+    .formula-label {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--stone); margin-bottom: 6px;
+    }
+
+    .formula-text {
+      font-family: var(--font-mono); font-size: 12px;
+      color: var(--muted); line-height: 1.7;
+    }
+
+    /* ============================================================
+       PLACEHOLDER
+    ============================================================ */
+    .placeholder-msg { text-align: center; padding: 60px 20px; }
+    .placeholder-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.3; }
+    .placeholder-msg p { font-size: 13px; letter-spacing: 0.04em; color: var(--stone); }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    footer {
+      text-align: center; padding: 24px;
+      font-size: 11px; letter-spacing: 0.08em; color: var(--stone);
+      text-transform: uppercase; border-top: 1px solid var(--border); margin-top: 40px;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 600px) {
+      header { padding: 0 16px; }
+      main { padding: 28px 12px 60px; }
+      .field-grid, .field-grid.three { grid-template-columns: 1fr; }
+      .calc-body { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-logo">
+      <div class="logo-mark">TSG</div>
+      <div>
+        <div class="header-title">CRE Calculator</div>
+        <div class="header-sub">Tenant Services Group</div>
+      </div>
+    </div>
+    <div class="header-sub" style="text-align:right;">Tenant Exclusive</div>
+  </header>
+
+  <main>
+    <div class="selector-section">
+      <label class="selector-label" for="calcSelect">Select Calculation</label>
+      <div class="selector-wrap">
+        <select id="calcSelect" onchange="loadCalc()">
+          <option value="">— Choose a calculator —</option>
+          <optgroup label="Space &amp; Area">
+            <option value="rentable">01 &nbsp; Rentable Area</option>
+            <option value="loadfactor">02 &nbsp; Load Factor</option>
+            <option value="parkingRatio">03 &nbsp; Parking Ratio</option>
+            <option value="spaceReq">04 &nbsp; Space Requirement</option>
+            <option value="occupancyUtil">05 &nbsp; Occupancy Ratio / Utilization</option>
+          </optgroup>
+          <optgroup label="Rent &amp; Lease Economics">
+            <option value="rentPerSF">06 &nbsp; Rent Per Square Foot</option>
+            <option value="monthlyRent">07 &nbsp; Monthly Rent</option>
+            <option value="totalObligation">08 &nbsp; Total Lease Obligation</option>
+            <option value="effectiveRent">09 &nbsp; Net Effective Rent</option>
+            <option value="npv">10 &nbsp; Net Present Value of Lease</option>
+          </optgroup>
+          <optgroup label="Concessions &amp; Incentives">
+            <option value="ti">11 &nbsp; Tenant Improvement Allowance</option>
+            <option value="tiAnalysis">12 &nbsp; TI Analysis — Tenant Out of Pocket</option>
+            <option value="tiAmort">13 &nbsp; TI Amortization</option>
+            <option value="freeRent">14 &nbsp; Free Rent Value</option>
+          </optgroup>
+          <optgroup label="Portfolio &amp; Strategy">
+            <option value="growthProjection">15 &nbsp; Growth Projection</option>
+            <option value="consolidation">16 &nbsp; Consolidation Analysis</option>
+          </optgroup>
+          <optgroup label="Industrial">
+            <option value="warehouseOffice">17 &nbsp; Warehouse Office Percentage</option>
+            <option value="clearHeight">18 &nbsp; Clear Height Efficiency</option>
+          </optgroup>
+          <optgroup label="Financials &amp; Brokerage">
+            <option value="commission">19 &nbsp; Commission Split</option>
+            <option value="breakEven">20 &nbsp; Break-Even Occupancy</option>
+            <option value="annualizedCost">21 &nbsp; Total Occupancy Cost</option>
+          </optgroup>
+        </select>
+        <div class="selector-arrow"></div>
+      </div>
+    </div>
+
+    <div id="calcPanel">
+      <div class="placeholder-msg">
+        <div class="placeholder-icon">▣</div>
+        <p>Select a calculation above to begin.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    Tenant Services Group, LLC &nbsp;·&nbsp; TREC #9011402 &nbsp;·&nbsp; Internal Use Only
+  </footer>
+
+  <script>
+    /* ============================================================
+       UTILITY FUNCTIONS
+    ============================================================ */
+
+    /** Format as USD: $1,234,567.89 */
+    function fmtCurrency(n, decimals = 2) {
+      if (!isFinite(n)) return '—';
+      return '$' + n.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    /** Format number with commas */
+    function fmtNum(n, decimals = 2) {
+      if (!isFinite(n)) return '—';
+      return n.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    /** Format as percentage */
+    function fmtPct(n, decimals = 2) {
+      if (!isFinite(n)) return '—';
+      return n.toFixed(decimals) + '%';
+    }
+
+    /** Parse numeric input field — returns NaN if empty or invalid */
+    function val(id) {
+      const el = document.getElementById(id);
+      if (!el) return NaN;
+      return parseFloat(el.value);
+    }
+
+    /** Show inline validation error */
+    function showError(msg) {
+      const el = document.getElementById('errorBox');
+      if (el) { el.textContent = msg; el.classList.add('visible'); }
+    }
+
+    /** Hide error */
+    function clearError() {
+      const el = document.getElementById('errorBox');
+      if (el) el.classList.remove('visible');
+    }
+
+    /**
+     * Render results into the result box.
+     * rows: array of { label, value, primary } or { section } for section headers.
+     * formulaLines: array of strings.
+     */
+    function showResult(rows, formulaLines) {
+      const box       = document.getElementById('resultBox');
+      const rowsEl    = document.getElementById('resultRows');
+      const formulaEl = document.getElementById('formulaText');
+
+      rowsEl.innerHTML = rows.map(r => {
+        if (r.section) {
+          return `<div class="result-row result-section-head">${r.section}</div>`;
+        }
+        return `
+          <div class="result-row ${r.primary ? 'primary' : ''}">
+            <span class="result-label">${r.label}</span>
+            <span class="result-value">${r.value}</span>
+          </div>`;
+      }).join('');
+
+      formulaEl.innerHTML = formulaLines.join('<br>');
+      box.classList.add('visible');
+    }
+
+    function clearResult() {
+      const box = document.getElementById('resultBox');
+      if (box) box.classList.remove('visible');
+    }
+
+    /* ============================================================
+       CALCULATOR DEFINITIONS
+       Each entry: { num, label, html, init? (optional), calculate }
+    ============================================================ */
+    const CALCS = {
+
+      /* ----------------------------------------------------------
+         01  RENTABLE AREA
+         RSF = USF × (1 + Load Factor / 100)
+      ---------------------------------------------------------- */
+      rentable: {
+        num: '01', label: 'Rentable Area',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="usf">Usable Square Feet (USF)</label>
+              <input type="number" id="usf" placeholder="e.g. 5000" min="0" />
+            </div>
+            <div class="field">
+              <label for="loadFactor">Load Factor (%)</label>
+              <input type="number" id="loadFactor" placeholder="e.g. 15" min="0" max="100" step="0.01" />
+              <span class="helper">Common range: 10–20%. Enter as a whole number.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const usf = val('usf'), lf = val('loadFactor');
+          if (isNaN(usf) || isNaN(lf)) { showError('Both fields are required.'); return; }
+          const rsf = usf * (1 + lf / 100);
+          showResult([
+            { label: 'Usable Square Feet',   value: fmtNum(usf, 0) + ' SF' },
+            { label: 'Load Factor Applied',  value: fmtPct(lf) },
+            { label: 'Rentable Square Feet', value: fmtNum(rsf, 0) + ' SF', primary: true },
+          ], [
+            'RSF = USF × (1 + Load Factor)',
+            `RSF = ${fmtNum(usf,0)} × (1 + ${lf}%) = ${fmtNum(rsf,0)} SF`,
+          ]);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         02  LOAD FACTOR (reverse)
+         LF = (RSF / USF − 1) × 100
+      ---------------------------------------------------------- */
+      loadfactor: {
+        num: '02', label: 'Load Factor',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="lf_usf">Usable Square Feet (USF)</label>
+              <input type="number" id="lf_usf" placeholder="e.g. 5000" min="0" />
+            </div>
+            <div class="field">
+              <label for="lf_rsf">Rentable Square Feet (RSF)</label>
+              <input type="number" id="lf_rsf" placeholder="e.g. 5750" min="0" />
+            </div>
+          </div>`,
+        calculate() {
+          const usf = val('lf_usf'), rsf = val('lf_rsf');
+          if (isNaN(usf) || isNaN(rsf)) { showError('Both fields are required.'); return; }
+          if (usf <= 0) { showError('Usable SF must be greater than zero.'); return; }
+          if (rsf < usf) { showError('Rentable SF cannot be less than Usable SF.'); return; }
+          const lf = ((rsf / usf) - 1) * 100;
+          showResult([
+            { label: 'Usable SF',            value: fmtNum(usf, 0) + ' SF' },
+            { label: 'Rentable SF',          value: fmtNum(rsf, 0) + ' SF' },
+            { label: 'Common Area Add-Back', value: fmtNum(rsf - usf, 0) + ' SF' },
+            { label: 'Load Factor',          value: fmtPct(lf), primary: true },
+          ], [
+            'Load Factor = (RSF ÷ USF) − 1',
+            `= (${fmtNum(rsf,0)} ÷ ${fmtNum(usf,0)}) − 1 = ${fmtPct(lf)}`,
+          ]);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         03  PARKING RATIO
+         Ratio = Total Spaces / (RSF / 1,000)
+      ---------------------------------------------------------- */
+      parkingRatio: {
+        num: '03', label: 'Parking Ratio',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="spaces">Total Parking Spaces</label>
+              <input type="number" id="spaces" placeholder="e.g. 200" min="0" />
+            </div>
+            <div class="field">
+              <label for="pr_rsf">Rentable Square Feet (RSF)</label>
+              <input type="number" id="pr_rsf" placeholder="e.g. 50000" min="0" />
+            </div>
+          </div>`,
+        calculate() {
+          const spaces = val('spaces'), rsf = val('pr_rsf');
+          if (isNaN(spaces) || isNaN(rsf)) { showError('Both fields are required.'); return; }
+          if (rsf <= 0) { showError('RSF must be greater than zero.'); return; }
+          const ratio = spaces / (rsf / 1000);
+          showResult([
+            { label: 'Total Spaces',             value: fmtNum(spaces, 0) },
+            { label: 'Building RSF',             value: fmtNum(rsf, 0) + ' SF' },
+            { label: 'Parking Ratio / 1,000 SF', value: fmtNum(ratio, 2) + ' / 1,000 SF', primary: true },
+          ], [
+            'Ratio = Spaces ÷ (RSF ÷ 1,000)',
+            `= ${fmtNum(spaces,0)} ÷ (${fmtNum(rsf,0)} ÷ 1,000) = ${fmtNum(ratio,2)} per 1,000 SF`,
+          ]);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         04  SPACE REQUIREMENT
+         Required USF = Headcount × SF per Person
+         Optional: apply growth buffer and convert to RSF via load factor
+      ---------------------------------------------------------- */
+      spaceReq: {
+        num: '04', label: 'Space Requirement',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="headcount">Headcount</label>
+              <input type="number" id="headcount" placeholder="e.g. 50" min="0" />
+            </div>
+            <div class="field">
+              <label for="sfPerPerson">SF per Person</label>
+              <input type="number" id="sfPerPerson" placeholder="e.g. 175" min="0" />
+              <span class="helper">Industry average: 150–200 SF per person.</span>
+            </div>
+            <div class="field">
+              <label for="growthPct">Growth Buffer (%)</label>
+              <input type="number" id="growthPct" placeholder="e.g. 10" min="0" max="100" />
+              <span class="helper">Enter 0 to skip.</span>
+            </div>
+            <div class="field">
+              <label for="sr_lf">Load Factor (%)</label>
+              <input type="number" id="sr_lf" placeholder="e.g. 15" min="0" max="100" />
+              <span class="helper">Converts USF estimate to RSF. Enter 0 to skip.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const hc     = val('headcount'), sfpp = val('sfPerPerson');
+          const growth = isNaN(val('growthPct')) ? 0 : val('growthPct');
+          const lf     = isNaN(val('sr_lf'))    ? 0 : val('sr_lf');
+          if (isNaN(hc) || isNaN(sfpp)) { showError('Headcount and SF per Person are required.'); return; }
+          const baseUSF        = hc * sfpp;
+          const bufferedHC     = hc * (1 + growth / 100);
+          const recommendedUSF = bufferedHC * sfpp;
+          const recommendedRSF = lf > 0 ? recommendedUSF * (1 + lf / 100) : null;
+          const rows = [
+            { label: 'Base Headcount',   value: fmtNum(hc, 0) + ' people' },
+            { label: 'SF per Person',    value: fmtNum(sfpp, 0) + ' SF' },
+            { label: 'Base Usable SF',   value: fmtNum(baseUSF, 0) + ' SF' },
+          ];
+          if (growth > 0) rows.push({ label: `Headcount w/ ${fmtPct(growth,0)} Buffer`, value: fmtNum(bufferedHC, 0) + ' people' });
+          rows.push({ label: 'Recommended Usable SF', value: fmtNum(recommendedUSF, 0) + ' SF', primary: true });
+          if (recommendedRSF) rows.push({ label: `Estimated RSF (${fmtPct(lf,0)} LF)`, value: fmtNum(recommendedRSF, 0) + ' SF' });
+          const fl = ['Base USF = Headcount × SF per Person',
+            `= ${fmtNum(hc,0)} × ${fmtNum(sfpp,0)} = ${fmtNum(baseUSF,0)} SF`];
+          if (growth > 0) fl.push(`Buffered = ${fmtNum(baseUSF,0)} × (1 + ${fmtPct(growth,0)}) = ${fmtNum(recommendedUSF,0)} SF`);
+          if (recommendedRSF) fl.push(`RSF = ${fmtNum(recommendedUSF,0)} × (1 + ${fmtPct(lf,0)}) = ${fmtNum(recommendedRSF,0)} SF`);
+          showResult(rows, fl);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         05  OCCUPANCY RATIO / UTILIZATION
+         Occupancy Rate = Occupied SF / Total SF
+         Utilization Rate = Avg Daily Users / Seat Capacity
+         Measures how efficiently space is being used.
+      ---------------------------------------------------------- */
+      occupancyUtil: {
+        num: '05', label: 'Occupancy Ratio / Utilization',
+        html: `
+          <div class="field-grid">
+            <div class="field-section-label">Space Metrics</div>
+            <div class="field">
+              <label for="ou_totalSF">Total Available SF</label>
+              <input type="number" id="ou_totalSF" placeholder="e.g. 10000" min="0" />
+            </div>
+            <div class="field">
+              <label for="ou_occupiedSF">Occupied / Active SF</label>
+              <input type="number" id="ou_occupiedSF" placeholder="e.g. 7500" min="0" />
+              <span class="helper">SF actively assigned or in use.</span>
+            </div>
+            <div class="field-section-label">Headcount Metrics</div>
+            <div class="field">
+              <label for="ou_capacity">Seat / Workstation Capacity</label>
+              <input type="number" id="ou_capacity" placeholder="e.g. 100" min="0" />
+            </div>
+            <div class="field">
+              <label for="ou_actualUsers">Average Daily Users</label>
+              <input type="number" id="ou_actualUsers" placeholder="e.g. 68" min="0" />
+              <span class="helper">Average people using the space on a given day.</span>
+            </div>
+            <div class="field">
+              <label for="ou_annualCost">Annual Occupancy Cost ($)</label>
+              <input type="number" id="ou_annualCost" placeholder="e.g. 240000" min="0" />
+              <span class="helper">Optional — used to calculate cost per person.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const totalSF  = val('ou_totalSF');
+          const occSF    = val('ou_occupiedSF');
+          const capacity = val('ou_capacity');
+          const users    = val('ou_actualUsers');
+          const annCost  = isNaN(val('ou_annualCost')) ? 0 : val('ou_annualCost');
+
+          if (isNaN(totalSF) || isNaN(occSF)) { showError('Total SF and Occupied SF are required.'); return; }
+          if (occSF > totalSF) { showError('Occupied SF cannot exceed Total Available SF.'); return; }
+
+          // Occupancy Rate = occupied / total
+          const occupancyRate = (occSF / totalSF) * 100;
+          const vacantSF      = totalSF - occSF;
+
+          const rows = [
+            { section: 'Space Efficiency' },
+            { label: 'Total Available SF',    value: fmtNum(totalSF, 0) + ' SF' },
+            { label: 'Occupied / Active SF',  value: fmtNum(occSF, 0) + ' SF' },
+            { label: 'Vacant / Unused SF',    value: fmtNum(vacantSF, 0) + ' SF' },
+            { label: 'Occupancy Rate',        value: fmtPct(occupancyRate), primary: true },
+          ];
+
+          const fl = [
+            'Occupancy Rate = Occupied SF ÷ Total SF',
+            `= ${fmtNum(occSF,0)} ÷ ${fmtNum(totalSF,0)} = ${fmtPct(occupancyRate)}`,
+          ];
+
+          // Utilization rate requires both capacity and users
+          if (!isNaN(capacity) && !isNaN(users) && capacity > 0) {
+            const utilRate  = (users / capacity) * 100;
+            const sfPerUser = occSF / Math.max(users, 1);
+            rows.push({ section: 'Utilization' });
+            rows.push({ label: 'Seat Capacity',      value: fmtNum(capacity, 0) + ' seats' });
+            rows.push({ label: 'Avg Daily Users',    value: fmtNum(users, 0) + ' people' });
+            rows.push({ label: 'Utilization Rate',   value: fmtPct(utilRate), primary: true });
+            rows.push({ label: 'SF per Active User', value: fmtNum(sfPerUser, 0) + ' SF / person' });
+            fl.push('Utilization Rate = Avg Daily Users ÷ Seat Capacity');
+            fl.push(`= ${fmtNum(users,0)} ÷ ${fmtNum(capacity,0)} = ${fmtPct(utilRate)}`);
+          }
+
+          // Cost per person if annual cost provided
+          if (annCost > 0 && !isNaN(users) && users > 0) {
+            const costPerUser = annCost / users;
+            rows.push({ section: 'Cost Efficiency' });
+            rows.push({ label: 'Annual Occupancy Cost',      value: fmtCurrency(annCost) });
+            rows.push({ label: 'Annual Cost per Daily User', value: fmtCurrency(costPerUser), primary: true });
+            fl.push(`Cost / Person = ${fmtCurrency(annCost)} ÷ ${fmtNum(users,0)} = ${fmtCurrency(costPerUser)}`);
+          }
+
+          showResult(rows, fl);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         06  RENT PER SF
+         Rate = Annual Rent / RSF
+      ---------------------------------------------------------- */
+      rentPerSF: {
+        num: '06', label: 'Rent Per Square Foot',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="annualRent">Annual Rent ($)</label>
+              <input type="number" id="annualRent" placeholder="e.g. 120000" min="0" />
+            </div>
+            <div class="field">
+              <label for="rpsf_rsf">Rentable Square Feet (RSF)</label>
+              <input type="number" id="rpsf_rsf" placeholder="e.g. 5000" min="0" />
+            </div>
+          </div>`,
+        calculate() {
+          const ar = val('annualRent'), rsf = val('rpsf_rsf');
+          if (isNaN(ar) || isNaN(rsf)) { showError('Both fields are required.'); return; }
+          if (rsf <= 0) { showError('RSF must be greater than zero.'); return; }
+          const rate = ar / rsf;
+          showResult([
+            { label: 'Annual Rent',       value: fmtCurrency(ar) },
+            { label: 'Rentable SF',       value: fmtNum(rsf, 0) + ' SF' },
+            { label: 'Monthly Rent',      value: fmtCurrency(ar / 12) },
+            { label: 'Annual Rate / SF',  value: fmtCurrency(rate) + ' / SF', primary: true },
+            { label: 'Monthly Rate / SF', value: fmtCurrency(rate / 12) + ' / SF' },
+          ], [
+            'Rate = Annual Rent ÷ RSF',
+            `= ${fmtCurrency(ar)} ÷ ${fmtNum(rsf,0)} = ${fmtCurrency(rate)} / SF / Year`,
+          ]);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         07  MONTHLY RENT
+         Monthly = RSF × Annual Rate / 12
+      ---------------------------------------------------------- */
+      monthlyRent: {
+        num: '07', label: 'Monthly Rent',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="mr_rsf">Rentable Square Feet (RSF)</label>
+              <input type="number" id="mr_rsf" placeholder="e.g. 5000" min="0" />
+            </div>
+            <div class="field">
+              <label for="mr_rate">Annual Rate ($ / SF)</label>
+              <input type="number" id="mr_rate" placeholder="e.g. 24.00" min="0" step="0.01" />
+            </div>
+          </div>`,
+        calculate() {
+          const rsf = val('mr_rsf'), rate = val('mr_rate');
+          if (isNaN(rsf) || isNaN(rate)) { showError('Both fields are required.'); return; }
+          const annual = rsf * rate, monthly = annual / 12;
+          showResult([
+            { label: 'Rentable SF',      value: fmtNum(rsf, 0) + ' SF' },
+            { label: 'Annual Rate / SF', value: fmtCurrency(rate) + ' / SF' },
+            { label: 'Annual Rent',      value: fmtCurrency(annual) },
+            { label: 'Monthly Rent',     value: fmtCurrency(monthly), primary: true },
+          ], [
+            'Monthly Rent = (RSF × Annual Rate) ÷ 12',
+            `= (${fmtNum(rsf,0)} × ${fmtCurrency(rate)}) ÷ 12 = ${fmtCurrency(monthly)}`,
+          ]);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         08  TOTAL LEASE OBLIGATION
+         Supports flat, % escalation, and fixed $/SF annual increases.
+         Year-by-year rent is summed; NNN/OPEX added separately.
+      ---------------------------------------------------------- */
+      totalObligation: {
+        num: '08', label: 'Total Lease Obligation',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="to_rsf">Rentable Square Feet (RSF)</label>
+              <input type="number" id="to_rsf" placeholder="e.g. 5000" min="0" />
+            </div>
+            <div class="field">
+              <label for="to_rate">Starting Rate ($ / SF / Year)</label>
+              <input type="number" id="to_rate" placeholder="e.g. 24.00" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="to_term">Lease Term (Months)</label>
+              <input type="number" id="to_term" placeholder="e.g. 60" min="1" />
+            </div>
+            <div class="field">
+              <label for="to_nnn">NNN / OPEX ($ / SF / Year)</label>
+              <input type="number" id="to_nnn" placeholder="e.g. 8.50" min="0" step="0.01" />
+              <span class="helper">Enter 0 for Gross / FSG leases.</span>
+            </div>
+            <div class="field full-width">
+              <label>Annual Rent Increases</label>
+              <div class="toggle-group">
+                <input type="radio" id="to_flat"  name="to_inc" value="flat"  checked />
+                <label for="to_flat">Flat / None</label>
+                <input type="radio" id="to_pct"   name="to_inc" value="pct" />
+                <label for="to_pct">Annual % Increase</label>
+                <input type="radio" id="to_fixed" name="to_inc" value="fixed" />
+                <label for="to_fixed">Fixed $ / SF / Year</label>
+              </div>
+            </div>
+            <div class="field" id="to_increaseField" style="display:none;">
+              <label for="to_increase" id="to_increaseLabel">Increase (%)</label>
+              <input type="number" id="to_increase" placeholder="e.g. 3" min="0" step="0.01" />
+            </div>
+          </div>`,
+        init() {
+          document.querySelectorAll('input[name="to_inc"]').forEach(r => {
+            r.addEventListener('change', () => {
+              const v   = document.querySelector('input[name="to_inc"]:checked').value;
+              const fld = document.getElementById('to_increaseField');
+              const lbl = document.getElementById('to_increaseLabel');
+              const inp = document.getElementById('to_increase');
+              fld.style.display = v === 'flat' ? 'none' : 'flex';
+              if (v === 'pct')   { lbl.textContent = 'Annual Increase (%)';      inp.placeholder = 'e.g. 3'; }
+              if (v === 'fixed') { lbl.textContent = 'Annual Increase ($ / SF)'; inp.placeholder = 'e.g. 0.50'; }
+            });
+          });
+        },
+        calculate() {
+          const rsf  = val('to_rsf'), rate = val('to_rate'), term = val('to_term');
+          const nnn  = isNaN(val('to_nnn')) ? 0 : val('to_nnn');
+          const mode = document.querySelector('input[name="to_inc"]:checked').value;
+          const incr = isNaN(val('to_increase')) ? 0 : val('to_increase');
+          if (isNaN(rsf) || isNaN(rate) || isNaN(term)) { showError('RSF, Starting Rate, and Term are required.'); return; }
+          const termYears = term / 12;
+          let totalBase = 0, breakdown = [];
+          for (let y = 1; y <= Math.ceil(termYears); y++) {
+            let cr = rate;
+            if (mode === 'pct'   && y > 1) cr = rate * Math.pow(1 + incr / 100, y - 1);
+            if (mode === 'fixed' && y > 1) cr = rate + incr * (y - 1);
+            const months = Math.min(12, term - (y - 1) * 12);
+            if (months <= 0) break;
+            const yr = rsf * cr * (months / 12);
+            totalBase += yr;
+            breakdown.push({ year: y, rate: cr, rent: yr, months });
+          }
+          const totalNNN = rsf * nnn * termYears;
+          const totalObl = totalBase + totalNNN;
+          const fl = ['Year-by-Year Breakdown:'];
+          breakdown.forEach(y => fl.push(`Yr ${y.year} (${y.months} mo): ${fmtNum(rsf,0)} × ${fmtCurrency(y.rate)}/SF = ${fmtCurrency(y.rent)}`));
+          if (nnn > 0) fl.push(`NNN Total: ${fmtNum(rsf,0)} × ${fmtCurrency(nnn)}/SF × ${fmtNum(termYears,2)} yrs = ${fmtCurrency(totalNNN)}`);
+          fl.push(`Grand Total = ${fmtCurrency(totalBase)} + ${fmtCurrency(totalNNN)} = ${fmtCurrency(totalObl)}`);
+          const rows = [
+            { label: 'Starting Monthly Rent', value: fmtCurrency(rsf * rate / 12) },
+            { label: 'Starting Annual Rent',  value: fmtCurrency(rsf * rate) },
+          ];
+          if (nnn > 0) {
+            rows.push({ label: 'Monthly NNN / OPEX', value: fmtCurrency(rsf * nnn / 12) });
+            rows.push({ label: 'Annual NNN / OPEX',  value: fmtCurrency(rsf * nnn) });
+          }
+          rows.push({ label: 'Total Base Rent Obligation', value: fmtCurrency(totalBase) });
+          if (nnn > 0) rows.push({ label: 'Total NNN / OPEX Obligation', value: fmtCurrency(totalNNN) });
+          rows.push({ label: 'Total Lease Obligation', value: fmtCurrency(totalObl), primary: true });
+          showResult(rows, fl);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         09  NET EFFECTIVE RENT
+         Strips concessions from gross total to reveal true economics.
+         Concessions: free rent, TI allowance, and additional expenses.
+         Net Effective Rate = (Gross Total − Concessions) / RSF / Term Yrs
+      ---------------------------------------------------------- */
+      effectiveRent: {
+        num: '09', label: 'Net Effective Rent',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="er_rsf">Rentable Square Feet (RSF)</label>
+              <input type="number" id="er_rsf" placeholder="e.g. 5000" min="0" />
+            </div>
+            <div class="field">
+              <label for="er_rate">Annual Rate ($ / SF)</label>
+              <input type="number" id="er_rate" placeholder="e.g. 24.00" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="er_term">Lease Term (Months)</label>
+              <input type="number" id="er_term" placeholder="e.g. 60" min="1" />
+            </div>
+            <div class="field">
+              <label for="er_freerent">Free Rent (Months)</label>
+              <input type="number" id="er_freerent" placeholder="e.g. 3" min="0" />
+              <span class="helper">Enter 0 if none.</span>
+            </div>
+            <div class="field">
+              <label for="er_ti">TI Allowance ($ / SF)</label>
+              <input type="number" id="er_ti" placeholder="e.g. 40.00" min="0" step="0.01" />
+              <span class="helper">Enter 0 if none.</span>
+            </div>
+            <div class="field">
+              <label for="er_addl">Additional Expenses ($ / SF)</label>
+              <input type="number" id="er_addl" placeholder="e.g. 5.00" min="0" step="0.01" />
+              <span class="helper">Moving costs, furniture, signage, etc. Enter 0 if none.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const rsf        = val('er_rsf'), rate = val('er_rate'), term = val('er_term');
+          const freeMonths = isNaN(val('er_freerent')) ? 0 : val('er_freerent');
+          const tiPerSF    = isNaN(val('er_ti'))    ? 0 : val('er_ti');
+          const addlPerSF  = isNaN(val('er_addl'))  ? 0 : val('er_addl');
+          if (isNaN(rsf) || isNaN(rate) || isNaN(term)) { showError('RSF, Rate, and Term are required.'); return; }
+          const termYears        = term / 12;
+          const monthlyRent      = rsf * rate / 12;
+          const grossTotal       = rsf * rate * termYears;
+          const freeRentValue    = monthlyRent * freeMonths;
+          const totalTI          = rsf * tiPerSF;
+          const totalAddl        = rsf * addlPerSF;
+          const totalConcessions = freeRentValue + totalTI + totalAddl;
+          const netEffRate       = (grossTotal - totalConcessions) / rsf / termYears;
+          const netEffTotal      = grossTotal - totalConcessions;
+          showResult([
+            { label: 'Gross (Asking) Rate',    value: fmtCurrency(rate) + ' / SF / Yr' },
+            { label: 'Gross Total Obligation', value: fmtCurrency(grossTotal) },
+            { label: 'Free Rent Value',        value: '(' + fmtCurrency(freeRentValue) + ')' },
+            { label: 'TI Allowance',           value: '(' + fmtCurrency(totalTI) + ')' },
+            { label: 'Additional Expenses',    value: '(' + fmtCurrency(totalAddl) + ')' },
+            { label: 'Total Concessions',      value: '(' + fmtCurrency(totalConcessions) + ')' },
+            { label: 'Net Effective Total',    value: fmtCurrency(netEffTotal) },
+            { label: 'Net Effective Rate',     value: fmtCurrency(netEffRate) + ' / SF / Yr', primary: true },
+          ], [
+            'Net Effective Rate = (Gross Total − Concessions) ÷ RSF ÷ Term (Yrs)',
+            `= (${fmtCurrency(grossTotal)} − ${fmtCurrency(totalConcessions)}) ÷ ${fmtNum(rsf,0)} ÷ ${fmtNum(termYears,3)}`,
+            `= ${fmtCurrency(netEffRate)} / SF / Year`,
+          ]);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         10  NET PRESENT VALUE OF LEASE
+         Discounts all future annual occupancy costs to today's dollars.
+         NPV = Σ [Annual Cost_t / (1 + r)^t] for t = 1 to n
+         Annual costs escalate by the specified escalation rate.
+      ---------------------------------------------------------- */
+      npv: {
+        num: '10', label: 'Net Present Value of Lease',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="npv_annual">Year 1 Annual Occupancy Cost ($)</label>
+              <input type="number" id="npv_annual" placeholder="e.g. 120000" min="0" />
+              <span class="helper">Include base rent, NNN, and all fixed recurring costs.</span>
+            </div>
+            <div class="field">
+              <label for="npv_term">Lease Term (Years)</label>
+              <input type="number" id="npv_term" placeholder="e.g. 5" min="1" step="1" />
+            </div>
+            <div class="field">
+              <label for="npv_discount">Discount Rate (%)</label>
+              <input type="number" id="npv_discount" placeholder="e.g. 7" min="0" step="0.01" />
+              <span class="helper">Company's hurdle rate or WACC. Typical range: 5–10%.</span>
+            </div>
+            <div class="field">
+              <label for="npv_escalation">Annual Cost Escalation (%)</label>
+              <input type="number" id="npv_escalation" placeholder="e.g. 3" min="0" step="0.01" />
+              <span class="helper">Matches rent escalation rate. Enter 0 for flat costs.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const annual     = val('npv_annual');
+          const term       = val('npv_term');
+          const discount   = val('npv_discount');
+          const escalation = isNaN(val('npv_escalation')) ? 0 : val('npv_escalation');
+          if (isNaN(annual) || isNaN(term) || isNaN(discount)) { showError('Annual Cost, Term, and Discount Rate are required.'); return; }
+          const r = discount / 100;
+          let npv = 0, grossTotal = 0;
+          const fl = ['Discounted Cash Flows (Year: Nominal Cost → Present Value):'];
+          for (let t = 1; t <= term; t++) {
+            // Apply annual escalation to get each year's nominal cost
+            const cost = annual * Math.pow(1 + escalation / 100, t - 1);
+            // Divide by discount factor to get present value
+            const pv   = cost / Math.pow(1 + r, t);
+            npv        += pv;
+            grossTotal += cost;
+            fl.push(`Yr ${t}: ${fmtCurrency(cost)} ÷ (1+${fmtPct(discount,1)})^${t} = ${fmtCurrency(pv)}`);
+          }
+          showResult([
+            { label: 'Year 1 Annual Cost',         value: fmtCurrency(annual) },
+            { label: 'Lease Term',                 value: term + ' years' },
+            { label: 'Discount Rate',              value: fmtPct(discount) },
+            { label: 'Annual Cost Escalation',     value: fmtPct(escalation) },
+            { label: 'Gross (Nominal) Total',      value: fmtCurrency(grossTotal) },
+            { label: 'Total Discount Applied',     value: '(' + fmtCurrency(grossTotal - npv) + ')' },
+            { label: 'Net Present Value of Lease', value: fmtCurrency(npv), primary: true },
+          ], fl);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         11  TENANT IMPROVEMENT ALLOWANCE
+         Total TI = RSF × TI per SF
+      ---------------------------------------------------------- */
+      ti: {
+        num: '11', label: 'Tenant Improvement Allowance',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="ti_rsf">Rentable Square Feet (RSF)</label>
+              <input type="number" id="ti_rsf" placeholder="e.g. 5000" min="0" />
+            </div>
+            <div class="field">
+              <label for="ti_perSF">TI Allowance ($ / SF)</label>
+              <input type="number" id="ti_perSF" placeholder="e.g. 40.00" min="0" step="0.01" />
+            </div>
+          </div>`,
+        calculate() {
+          const rsf = val('ti_rsf'), perSF = val('ti_perSF');
+          if (isNaN(rsf) || isNaN(perSF)) { showError('Both fields are required.'); return; }
+          showResult([
+            { label: 'Rentable SF',        value: fmtNum(rsf, 0) + ' SF' },
+            { label: 'TI Allowance / SF',  value: fmtCurrency(perSF) },
+            { label: 'Total TI Allowance', value: fmtCurrency(rsf * perSF), primary: true },
+          ], [
+            'Total TI = RSF × TI / SF',
+            `= ${fmtNum(rsf,0)} × ${fmtCurrency(perSF)} = ${fmtCurrency(rsf * perSF)}`,
+          ]);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         12  TI ANALYSIS — TENANT OUT OF POCKET
+         Measures the tenant's actual capital exposure after all
+         landlord contributions are applied.
+         Tenant OOP = Total Build-Out Cost − Landlord Contributions
+      ---------------------------------------------------------- */
+      tiAnalysis: {
+        num: '12', label: 'TI Analysis — Tenant Out of Pocket',
+        html: `
+          <div class="field-grid">
+            <div class="field-section-label">Build-Out Costs</div>
+            <div class="field">
+              <label for="tia_rsf">Rentable Square Feet (RSF)</label>
+              <input type="number" id="tia_rsf" placeholder="e.g. 5000" min="0" />
+            </div>
+            <div class="field">
+              <label for="tia_constCost">Construction Cost ($ / SF)</label>
+              <input type="number" id="tia_constCost" placeholder="e.g. 75.00" min="0" step="0.01" />
+              <span class="helper">Blended hard + soft cost estimate per SF.</span>
+            </div>
+            <div class="field">
+              <label for="tia_ffeCost">FF&amp;E / Furniture ($ / SF)</label>
+              <input type="number" id="tia_ffeCost" placeholder="e.g. 20.00" min="0" step="0.01" />
+              <span class="helper">Enter 0 if included above or not applicable.</span>
+            </div>
+            <div class="field">
+              <label for="tia_movingCost">Moving / Relocation ($)</label>
+              <input type="number" id="tia_movingCost" placeholder="e.g. 15000" min="0" />
+              <span class="helper">Enter 0 if not applicable.</span>
+            </div>
+            <div class="field-section-label">Landlord Contributions</div>
+            <div class="field">
+              <label for="tia_tiAllowance">TI Allowance ($ / SF)</label>
+              <input type="number" id="tia_tiAllowance" placeholder="e.g. 50.00" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="tia_otherLL">Other LL Contributions ($)</label>
+              <input type="number" id="tia_otherLL" placeholder="e.g. 5000" min="0" />
+              <span class="helper">Signage allowance, furniture credit, etc. Enter 0 if none.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const rsf       = val('tia_rsf');
+          const constPSF  = val('tia_constCost');
+          const ffePSF    = isNaN(val('tia_ffeCost'))    ? 0 : val('tia_ffeCost');
+          const moving    = isNaN(val('tia_movingCost')) ? 0 : val('tia_movingCost');
+          const tiPSF     = val('tia_tiAllowance');
+          const otherLL   = isNaN(val('tia_otherLL'))    ? 0 : val('tia_otherLL');
+          if (isNaN(rsf) || isNaN(constPSF) || isNaN(tiPSF)) { showError('RSF, Construction Cost, and TI Allowance are required.'); return; }
+          const totalConst    = rsf * constPSF;
+          const totalFFE      = rsf * ffePSF;
+          const totalBuildout = totalConst + totalFFE + moving;
+          const totalTI       = rsf * tiPSF;
+          const totalLL       = totalTI + otherLL;
+          const tenantOOP     = totalBuildout - totalLL;
+          const oopPerSF      = tenantOOP / rsf;
+          const llCoverPct    = (totalLL / totalBuildout) * 100;
+          showResult([
+            { section: 'Total Project Cost' },
+            { label: 'Construction',           value: fmtCurrency(totalConst) },
+            { label: 'FF&E / Furniture',       value: fmtCurrency(totalFFE) },
+            { label: 'Moving / Relocation',    value: fmtCurrency(moving) },
+            { label: 'Total Project Cost',     value: fmtCurrency(totalBuildout) },
+            { section: 'Landlord Contributions' },
+            { label: 'TI Allowance',           value: '(' + fmtCurrency(totalTI) + ')' },
+            { label: 'Other LL Contributions', value: '(' + fmtCurrency(otherLL) + ')' },
+            { label: 'LL Coverage of Total',   value: fmtPct(llCoverPct) },
+            { section: 'Tenant Exposure' },
+            { label: 'Tenant Out of Pocket',   value: fmtCurrency(Math.max(0, tenantOOP)), primary: true },
+            { label: 'Tenant Exposure / SF',   value: fmtCurrency(Math.max(0, oopPerSF)) + ' / SF' },
+          ], [
+            'Tenant OOP = Total Build-Out Cost − Total LL Contributions',
+            `= ${fmtCurrency(totalBuildout)} − ${fmtCurrency(totalLL)} = ${fmtCurrency(tenantOOP)}`,
+            `OOP / SF = ${fmtCurrency(tenantOOP)} ÷ ${fmtNum(rsf,0)} = ${fmtCurrency(oopPerSF)} / SF`,
+          ]);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         13  TI AMORTIZATION
+         Tenant-funded TI overage amortized into additional rent
+         using standard loan amortization formula:
+         Monthly Payment = P × [r(1+r)^n] / [(1+r)^n − 1]
+         Outputs add-on cost per SF and blended effective rate.
+      ---------------------------------------------------------- */
+      tiAmort: {
+        num: '13', label: 'TI Amortization',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="tiam_principal">TI Overage / Principal ($)</label>
+              <input type="number" id="tiam_principal" placeholder="e.g. 50000" min="0" />
+              <span class="helper">Total amount being amortized into additional rent.</span>
+            </div>
+            <div class="field">
+              <label for="tiam_rate">Amortization Interest Rate (% / Year)</label>
+              <input type="number" id="tiam_rate" placeholder="e.g. 7.00" min="0" step="0.01" />
+              <span class="helper">Annual rate applied by the landlord to the overage.</span>
+            </div>
+            <div class="field">
+              <label for="tiam_term">Amortization Term (Months)</label>
+              <input type="number" id="tiam_term" placeholder="e.g. 60" min="1" />
+              <span class="helper">Typically matches the lease term.</span>
+            </div>
+            <div class="field">
+              <label for="tiam_rsf">Rentable Square Feet (RSF)</label>
+              <input type="number" id="tiam_rsf" placeholder="e.g. 5000" min="0" />
+              <span class="helper">Used to calculate the add-on cost per SF.</span>
+            </div>
+            <div class="field">
+              <label for="tiam_baseRate">Base Rent ($ / SF / Year)</label>
+              <input type="number" id="tiam_baseRate" placeholder="e.g. 24.00" min="0" step="0.01" />
+              <span class="helper">Optional — shows blended effective rate.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const P    = val('tiam_principal');
+          const annR = val('tiam_rate');
+          const n    = val('tiam_term');
+          const rsf  = isNaN(val('tiam_rsf'))      ? 0 : val('tiam_rsf');
+          const base = isNaN(val('tiam_baseRate')) ? 0 : val('tiam_baseRate');
+          if (isNaN(P) || isNaN(annR) || isNaN(n)) { showError('Principal, Interest Rate, and Term are required.'); return; }
+          if (P <= 0) { showError('Principal must be greater than zero.'); return; }
+          // Monthly rate; handle zero-interest edge case
+          const r = (annR / 100) / 12;
+          const monthlyPayment = r === 0 ? P / n
+            : P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+          const totalRepayment = monthlyPayment * n;
+          const totalInterest  = totalRepayment - P;
+          const rows = [
+            { label: 'TI Principal',           value: fmtCurrency(P) },
+            { label: 'Amortization Rate',      value: fmtPct(annR) + ' / Year' },
+            { label: 'Term',                   value: n + ' months' },
+            { label: 'Monthly Add-On Payment', value: fmtCurrency(monthlyPayment), primary: true },
+            { label: 'Annual Add-On Payment',  value: fmtCurrency(monthlyPayment * 12) },
+            { label: 'Total Interest',         value: fmtCurrency(totalInterest) },
+            { label: 'Total Repayment',        value: fmtCurrency(totalRepayment) },
+          ];
+          const fl = [
+            'Monthly Payment = P × [r(1+r)^n] / [(1+r)^n − 1]',
+            `P=${fmtCurrency(P)}, r=${fmtNum(r*100,4)}%/mo, n=${n} months`,
+            `Monthly = ${fmtCurrency(monthlyPayment)}`,
+          ];
+          if (rsf > 0) {
+            const addlYr  = (monthlyPayment * 12) / rsf;
+            rows.push({ section: 'Per SF Impact' });
+            rows.push({ label: 'Add-On Cost / SF / Year', value: fmtCurrency(addlYr) + ' / SF' });
+            fl.push(`Add-On / SF / Yr = ${fmtCurrency(monthlyPayment*12)} ÷ ${fmtNum(rsf,0)} = ${fmtCurrency(addlYr)}`);
+            if (base > 0) {
+              rows.push({ label: 'Base Rate',              value: fmtCurrency(base) + ' / SF / Yr' });
+              rows.push({ label: 'Blended Effective Rate', value: fmtCurrency(base + addlYr) + ' / SF / Yr', primary: true });
+              fl.push(`Blended = ${fmtCurrency(base)} + ${fmtCurrency(addlYr)} = ${fmtCurrency(base + addlYr)} / SF / Yr`);
+            }
+          }
+          showResult(rows, fl);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         14  FREE RENT VALUE
+         Total Free Rent = Monthly Rent × Free Months
+      ---------------------------------------------------------- */
+      freeRent: {
+        num: '14', label: 'Free Rent Value',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="fr_monthly">Monthly Rent ($)</label>
+              <input type="number" id="fr_monthly" placeholder="e.g. 8500" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="fr_months">Free Rent Months</label>
+              <input type="number" id="fr_months" placeholder="e.g. 3" min="0" />
+            </div>
+          </div>`,
+        calculate() {
+          const monthly = val('fr_monthly'), months = val('fr_months');
+          if (isNaN(monthly) || isNaN(months)) { showError('Both fields are required.'); return; }
+          showResult([
+            { label: 'Monthly Rent',    value: fmtCurrency(monthly) },
+            { label: 'Free Months',     value: fmtNum(months, 0) + ' months' },
+            { label: 'Total Free Rent', value: fmtCurrency(monthly * months), primary: true },
+          ], [
+            'Free Rent Value = Monthly Rent × Free Months',
+            `= ${fmtCurrency(monthly)} × ${months} = ${fmtCurrency(monthly * months)}`,
+          ]);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         15  GROWTH PROJECTION
+         Projects headcount and space requirements compounded annually.
+         Future HC = Current HC × (1 + Growth Rate)^Year
+         Future USF = Future HC × SF per Person
+         Future RSF = Future USF × (1 + Load Factor) if provided
+      ---------------------------------------------------------- */
+      growthProjection: {
+        num: '15', label: 'Growth Projection',
+        html: `
+          <div class="field-grid">
+            <div class="field-section-label">Current State</div>
+            <div class="field">
+              <label for="gp_hc">Current Headcount</label>
+              <input type="number" id="gp_hc" placeholder="e.g. 80" min="0" />
+            </div>
+            <div class="field">
+              <label for="gp_currentSF">Current Occupied SF</label>
+              <input type="number" id="gp_currentSF" placeholder="e.g. 14000" min="0" />
+            </div>
+            <div class="field-section-label">Growth Assumptions</div>
+            <div class="field">
+              <label for="gp_growthRate">Annual Headcount Growth Rate (%)</label>
+              <input type="number" id="gp_growthRate" placeholder="e.g. 8" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="gp_years">Projection Horizon (Years)</label>
+              <input type="number" id="gp_years" placeholder="e.g. 5" min="1" max="20" step="1" />
+            </div>
+            <div class="field">
+              <label for="gp_sfPerPerson">Target SF per Person</label>
+              <input type="number" id="gp_sfPerPerson" placeholder="e.g. 175" min="0" />
+              <span class="helper">May differ from current to reflect densification goals.</span>
+            </div>
+            <div class="field">
+              <label for="gp_lf">Load Factor (%)</label>
+              <input type="number" id="gp_lf" placeholder="e.g. 15" min="0" max="100" />
+              <span class="helper">Enter 0 to output USF only.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const hc     = val('gp_hc');
+          const currSF = val('gp_currentSF');
+          const rate   = val('gp_growthRate');
+          const years  = val('gp_years');
+          const sfpp   = val('gp_sfPerPerson');
+          const lf     = isNaN(val('gp_lf')) ? 0 : val('gp_lf');
+          if (isNaN(hc) || isNaN(currSF) || isNaN(rate) || isNaN(years) || isNaN(sfpp)) {
+            showError('All fields except Load Factor are required.');
+            return;
+          }
+          const fl = [
+            'Future HC = Current HC × (1 + Growth Rate)^Year',
+            'Future USF = Future HC × SF per Person',
+            lf > 0 ? 'Future RSF = Future USF × (1 + Load Factor)' : '',
+            'Year | Headcount | Usable SF | Rentable SF',
+          ].filter(Boolean);
+
+          let futureHC, futureUSF, futureRSF;
+          for (let y = 1; y <= years; y++) {
+            futureHC  = hc  * Math.pow(1 + rate / 100, y);
+            futureUSF = futureHC * sfpp;
+            futureRSF = lf > 0 ? futureUSF * (1 + lf / 100) : futureUSF;
+            fl.push(`Yr ${y}: ${fmtNum(futureHC,0)} people | ${fmtNum(futureUSF,0)} USF | ${lf > 0 ? fmtNum(futureRSF,0)+' RSF' : '—'}`);
+          }
+
+          const sfDelta = (lf > 0 ? futureRSF : futureUSF) - currSF;
+          const rows = [
+            { label: 'Current Headcount',  value: fmtNum(hc, 0) + ' people' },
+            { label: 'Current SF',         value: fmtNum(currSF, 0) + ' SF' },
+            { label: 'Annual Growth Rate', value: fmtPct(rate) },
+            { label: `Yr ${years} Headcount`, value: fmtNum(futureHC, 0) + ' people' },
+            { label: `Yr ${years} Usable SF`, value: fmtNum(futureUSF, 0) + ' SF', primary: true },
+          ];
+          if (lf > 0) rows.push({ label: `Yr ${years} Rentable SF`, value: fmtNum(futureRSF, 0) + ' SF', primary: true });
+          rows.push({ label: 'SF Delta vs. Current', value: (sfDelta >= 0 ? '+' : '') + fmtNum(sfDelta, 0) + ' SF' });
+          showResult(rows, fl);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         16  CONSOLIDATION ANALYSIS
+         Compares current portfolio costs against a consolidated location.
+         Calculates annual savings, net term benefit, and payback period.
+         Annual Savings = Current Annual Cost − New Annual Cost
+         Payback (months) = Net Transition Cost / Annual Savings × 12
+      ---------------------------------------------------------- */
+      consolidation: {
+        num: '16', label: 'Consolidation Analysis',
+        html: `
+          <div class="field-grid">
+            <div class="field-section-label">Current Portfolio (Combined)</div>
+            <div class="field">
+              <label for="con_currSF">Total Current SF (All Locations)</label>
+              <input type="number" id="con_currSF" placeholder="e.g. 25000" min="0" />
+            </div>
+            <div class="field">
+              <label for="con_currRate">Blended Avg Rent Rate ($ / SF / Yr)</label>
+              <input type="number" id="con_currRate" placeholder="e.g. 22.00" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="con_currNNN">Blended NNN / OPEX ($ / SF / Yr)</label>
+              <input type="number" id="con_currNNN" placeholder="e.g. 7.00" min="0" step="0.01" />
+              <span class="helper">Enter 0 for gross leases.</span>
+            </div>
+            <div class="field">
+              <label for="con_numLoc">Number of Current Locations</label>
+              <input type="number" id="con_numLoc" placeholder="e.g. 4" min="1" />
+            </div>
+            <div class="field-section-label">Consolidated Location</div>
+            <div class="field">
+              <label for="con_newSF">New / Consolidated SF</label>
+              <input type="number" id="con_newSF" placeholder="e.g. 18000" min="0" />
+            </div>
+            <div class="field">
+              <label for="con_newRate">New Rent Rate ($ / SF / Yr)</label>
+              <input type="number" id="con_newRate" placeholder="e.g. 26.00" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="con_newNNN">New NNN / OPEX ($ / SF / Yr)</label>
+              <input type="number" id="con_newNNN" placeholder="e.g. 9.00" min="0" step="0.01" />
+              <span class="helper">Enter 0 for gross leases.</span>
+            </div>
+            <div class="field">
+              <label for="con_newTerm">New Lease Term (Years)</label>
+              <input type="number" id="con_newTerm" placeholder="e.g. 5" min="1" />
+            </div>
+            <div class="field-section-label">Transition Costs</div>
+            <div class="field">
+              <label for="con_movingCost">Moving / Relocation ($)</label>
+              <input type="number" id="con_movingCost" placeholder="e.g. 40000" min="0" />
+            </div>
+            <div class="field">
+              <label for="con_tiOOP">Tenant TI Out of Pocket ($)</label>
+              <input type="number" id="con_tiOOP" placeholder="e.g. 30000" min="0" />
+              <span class="helper">Buildout cost above the LL allowance.</span>
+            </div>
+            <div class="field">
+              <label for="con_freeRentVal">Free Rent Value at New Location ($)</label>
+              <input type="number" id="con_freeRentVal" placeholder="e.g. 20000" min="0" />
+              <span class="helper">Offsets transition costs.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const currSF   = val('con_currSF');
+          const currR    = val('con_currRate');
+          const currNNN  = isNaN(val('con_currNNN'))     ? 0 : val('con_currNNN');
+          const numLoc   = isNaN(val('con_numLoc'))      ? 1 : val('con_numLoc');
+          const newSF    = val('con_newSF');
+          const newR     = val('con_newRate');
+          const newNNN   = isNaN(val('con_newNNN'))      ? 0 : val('con_newNNN');
+          const term     = isNaN(val('con_newTerm'))     ? 1 : val('con_newTerm');
+          const moving   = isNaN(val('con_movingCost'))  ? 0 : val('con_movingCost');
+          const tiOOP    = isNaN(val('con_tiOOP'))       ? 0 : val('con_tiOOP');
+          const freeRV   = isNaN(val('con_freeRentVal')) ? 0 : val('con_freeRentVal');
+          if (isNaN(currSF) || isNaN(currR) || isNaN(newSF) || isNaN(newR)) {
+            showError('Current SF, Current Rate, New SF, and New Rate are required.');
+            return;
+          }
+          const currAnnual      = currSF * (currR + currNNN);
+          const newAnnual       = newSF  * (newR  + newNNN);
+          const annualSavings   = currAnnual - newAnnual;
+          const sfReduction     = currSF - newSF;
+          const sfReductionPct  = (sfReduction / currSF) * 100;
+          const netTransition   = moving + tiOOP - freeRV;
+          const totalTermSavings = annualSavings * term;
+          const netTermBenefit  = totalTermSavings - netTransition;
+          const paybackMonths   = annualSavings > 0 ? (netTransition / annualSavings) * 12 : null;
+
+          showResult([
+            { section: 'Current Portfolio' },
+            { label: 'Total Current SF',    value: fmtNum(currSF, 0) + ' SF' },
+            { label: 'Current Annual Cost', value: fmtCurrency(currAnnual) },
+            { label: 'Number of Locations', value: fmtNum(numLoc, 0) },
+            { section: 'Consolidated Location' },
+            { label: 'New Consolidated SF', value: fmtNum(newSF, 0) + ' SF' },
+            { label: 'New Annual Cost',     value: fmtCurrency(newAnnual) },
+            { label: 'SF Reduction',        value: fmtNum(sfReduction, 0) + ' SF (' + fmtPct(sfReductionPct, 1) + ')' },
+            { section: 'Financial Summary' },
+            { label: 'Annual Savings / (Cost)', value: (annualSavings >= 0 ? '' : '(') + fmtCurrency(Math.abs(annualSavings)) + (annualSavings >= 0 ? '' : ')'), primary: true },
+            { label: 'Net Transition Cost',     value: fmtCurrency(Math.max(0, netTransition)) },
+            { label: `Gross ${term}-Yr Savings`, value: fmtCurrency(totalTermSavings) },
+            { label: `Net ${term}-Yr Benefit`,  value: fmtCurrency(netTermBenefit), primary: true },
+            { label: 'Payback Period',          value: paybackMonths !== null && annualSavings > 0 ? fmtNum(paybackMonths, 1) + ' months' : 'N/A — no annual savings' },
+          ], [
+            'Current Annual = SF × (Rate + NNN)',
+            `= ${fmtNum(currSF,0)} × (${fmtCurrency(currR)} + ${fmtCurrency(currNNN)}) = ${fmtCurrency(currAnnual)}`,
+            'New Annual = SF × (Rate + NNN)',
+            `= ${fmtNum(newSF,0)} × (${fmtCurrency(newR)} + ${fmtCurrency(newNNN)}) = ${fmtCurrency(newAnnual)}`,
+            `Annual Savings = ${fmtCurrency(currAnnual)} − ${fmtCurrency(newAnnual)} = ${fmtCurrency(annualSavings)}`,
+            `Net Transition = Moving (${fmtCurrency(moving)}) + TI OOP (${fmtCurrency(tiOOP)}) − Free Rent (${fmtCurrency(freeRV)}) = ${fmtCurrency(netTransition)}`,
+            paybackMonths !== null ? `Payback = ${fmtCurrency(netTransition)} ÷ ${fmtCurrency(annualSavings)}/yr × 12 = ${fmtNum(paybackMonths,1)} months` : '',
+          ].filter(Boolean));
+        }
+      },
+
+      /* ----------------------------------------------------------
+         17  WAREHOUSE OFFICE PERCENTAGE
+         Measures office finish ratio within an industrial building.
+         Office % = Office SF / Total Building SF × 100
+         Lenders typically flag buildings exceeding 15–20% office.
+         Optional: dock door ratio and volume estimate.
+      ---------------------------------------------------------- */
+      warehouseOffice: {
+        num: '17', label: 'Warehouse Office Percentage',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="wo_totalSF">Total Building SF</label>
+              <input type="number" id="wo_totalSF" placeholder="e.g. 50000" min="0" />
+            </div>
+            <div class="field">
+              <label for="wo_officeSF">Office / Finished SF</label>
+              <input type="number" id="wo_officeSF" placeholder="e.g. 5000" min="0" />
+              <span class="helper">Conditioned, finished interior office area.</span>
+            </div>
+            <div class="field">
+              <label for="wo_ceilingHt">Warehouse Clear Height (ft)</label>
+              <input type="number" id="wo_ceilingHt" placeholder="e.g. 28" min="0" step="0.5" />
+              <span class="helper">Optional — used to estimate cubic volume.</span>
+            </div>
+            <div class="field">
+              <label for="wo_dockDoors">Number of Dock Doors</label>
+              <input type="number" id="wo_dockDoors" placeholder="e.g. 4" min="0" />
+              <span class="helper">Optional — outputs dock-to-SF ratio.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const total  = val('wo_totalSF');
+          const office = val('wo_officeSF');
+          const height = isNaN(val('wo_ceilingHt')) ? 0 : val('wo_ceilingHt');
+          const docks  = isNaN(val('wo_dockDoors')) ? 0 : val('wo_dockDoors');
+          if (isNaN(total) || isNaN(office)) { showError('Total Building SF and Office SF are required.'); return; }
+          if (office > total) { showError('Office SF cannot exceed Total Building SF.'); return; }
+          const warehouseSF  = total - office;
+          const officePct    = (office / total) * 100;
+          const warehousePct = 100 - officePct;
+          const lenderFlag   = officePct > 20;
+          const rows = [
+            { label: 'Total Building SF',      value: fmtNum(total, 0) + ' SF' },
+            { label: 'Office / Finished SF',   value: fmtNum(office, 0) + ' SF' },
+            { label: 'Warehouse / Industrial SF', value: fmtNum(warehouseSF, 0) + ' SF' },
+            { label: 'Office Percentage',      value: fmtPct(officePct), primary: true },
+            { label: 'Warehouse Percentage',   value: fmtPct(warehousePct) },
+            { label: 'Lender Threshold (≤20%)', value: lenderFlag ? '⚠ Exceeds 20% — may affect financing' : '✓ Within standard threshold' },
+          ];
+          const fl = [
+            'Office % = Office SF ÷ Total SF',
+            `= ${fmtNum(office,0)} ÷ ${fmtNum(total,0)} = ${fmtPct(officePct)}`,
+          ];
+          if (height > 0) {
+            rows.push({ section: 'Volume' });
+            rows.push({ label: 'Clear Height',          value: fmtNum(height, 1) + ' ft' });
+            rows.push({ label: 'Warehouse Cubic Feet',  value: fmtNum(warehouseSF * height, 0) + ' cu ft' });
+            fl.push(`Cubic Ft = ${fmtNum(warehouseSF,0)} × ${height} = ${fmtNum(warehouseSF*height,0)} cu ft`);
+          }
+          if (docks > 0) {
+            const sfPerDock = warehouseSF / docks;
+            rows.push({ section: 'Dock Ratio' });
+            rows.push({ label: 'Dock Doors',               value: fmtNum(docks, 0) });
+            rows.push({ label: 'Warehouse SF per Dock Door', value: fmtNum(sfPerDock, 0) + ' SF / door' });
+            fl.push(`SF per Dock = ${fmtNum(warehouseSF,0)} ÷ ${docks} = ${fmtNum(sfPerDock,0)} SF / door`);
+          }
+          showResult(rows, fl);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         18  CLEAR HEIGHT EFFICIENCY
+         Determines maximum pallet stacking levels and total pallet
+         positions within a warehouse given its clear height.
+         Stacking Levels = floor((Clear Height − Clearance) / Pallet Height)
+         Floor Positions = (Warehouse SF × Storage Efficiency) / SF per Position
+         Total Positions = Floor Positions × Stacking Levels
+      ---------------------------------------------------------- */
+      clearHeight: {
+        num: '18', label: 'Clear Height Efficiency',
+        html: `
+          <div class="field-grid">
+            <div class="field-section-label">Building Dimensions</div>
+            <div class="field">
+              <label for="ch_clearHt">Building Clear Height (ft)</label>
+              <input type="number" id="ch_clearHt" placeholder="e.g. 32" min="0" step="0.5" />
+              <span class="helper">Height from floor to lowest obstruction (sprinklers, beams).</span>
+            </div>
+            <div class="field">
+              <label for="ch_warehouseSF">Storage Area SF (Warehouse Only)</label>
+              <input type="number" id="ch_warehouseSF" placeholder="e.g. 40000" min="0" />
+              <span class="helper">Exclude office and dock staging areas.</span>
+            </div>
+            <div class="field-section-label">Pallet &amp; Racking Assumptions</div>
+            <div class="field">
+              <label for="ch_palletHt">Loaded Pallet Height (inches)</label>
+              <input type="number" id="ch_palletHt" placeholder="e.g. 60" min="0" />
+              <span class="helper">Pallet board (5–6") + product height. Typical: 48–72".</span>
+            </div>
+            <div class="field">
+              <label for="ch_clearance">Top-of-Rack Clearance (inches)</label>
+              <input type="number" id="ch_clearance" placeholder="e.g. 18" min="0" />
+              <span class="helper">Code-required sprinkler clearance. Typically 18".</span>
+            </div>
+            <div class="field">
+              <label for="ch_palletSF">Floor Area per Pallet Position (SF)</label>
+              <input type="number" id="ch_palletSF" placeholder="e.g. 14" min="0" step="0.1" />
+              <span class="helper">Approx. 14–16 SF including half of aisle allocation.</span>
+            </div>
+            <div class="field">
+              <label for="ch_aisleEff">Storage Efficiency (%)</label>
+              <input type="number" id="ch_aisleEff" placeholder="e.g. 50" min="1" max="100" />
+              <span class="helper">% of warehouse SF usable for racking (aisles, columns, staging reduce this). Typical: 40–60%.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const clearHt    = val('ch_clearHt');
+          const wSF        = val('ch_warehouseSF');
+          const palletHtIn = val('ch_palletHt');
+          const clearance  = isNaN(val('ch_clearance'))  ? 18 : val('ch_clearance');
+          const palletSF   = val('ch_palletSF');
+          const efficiency = val('ch_aisleEff');
+          if (isNaN(clearHt) || isNaN(wSF) || isNaN(palletHtIn) || isNaN(palletSF) || isNaN(efficiency)) {
+            showError('All fields except Clearance are required.');
+            return;
+          }
+          // Convert clear height to inches for comparison
+          const clearHtIn      = clearHt * 12;
+          const usableHtIn     = clearHtIn - clearance;
+          // Stacking levels = how many loaded pallets fit vertically
+          const stackingLevels = Math.floor(usableHtIn / palletHtIn);
+          if (stackingLevels < 1) { showError('Usable height is less than one pallet height. Check inputs.'); return; }
+          const usableSF       = wSF * (efficiency / 100);
+          const floorPositions = Math.floor(usableSF / palletSF);
+          const totalPositions = floorPositions * stackingLevels;
+          const totalCubicFt   = wSF * clearHt;
+          const usableCubicFt  = usableSF * (usableHtIn / 12);
+          const cubicEff       = (usableCubicFt / totalCubicFt) * 100;
+          showResult([
+            { section: 'Vertical Capacity' },
+            { label: 'Building Clear Height',       value: fmtNum(clearHt, 1) + ' ft' },
+            { label: 'Sprinkler Clearance',         value: fmtNum(clearance / 12, 2) + ' ft' },
+            { label: 'Usable Storage Height',       value: fmtNum(usableHtIn / 12, 2) + ' ft' },
+            { label: 'Loaded Pallet Height',        value: fmtNum(palletHtIn / 12, 2) + ' ft' },
+            { label: 'Max Stacking Levels',         value: fmtNum(stackingLevels, 0) + ' levels', primary: true },
+            { section: 'Floor &amp; Total Positions' },
+            { label: 'Warehouse SF',                value: fmtNum(wSF, 0) + ' SF' },
+            { label: 'Storage Efficiency',          value: fmtPct(efficiency) },
+            { label: 'Usable Storage SF',           value: fmtNum(usableSF, 0) + ' SF' },
+            { label: 'Floor-Level Positions',       value: fmtNum(floorPositions, 0) },
+            { label: 'Total Pallet Positions',      value: fmtNum(totalPositions, 0), primary: true },
+            { section: 'Volumetric Efficiency' },
+            { label: 'Total Building Cubic Ft',     value: fmtNum(totalCubicFt, 0) + ' cu ft' },
+            { label: 'Usable Storage Cubic Ft',     value: fmtNum(usableCubicFt, 0) + ' cu ft' },
+            { label: 'Cubic Utilization Rate',      value: fmtPct(cubicEff) },
+          ], [
+            'Stacking Levels = floor((Clear Height − Clearance) ÷ Pallet Height)',
+            `= floor((${clearHtIn}" − ${clearance}") ÷ ${palletHtIn}") = ${stackingLevels} levels`,
+            'Floor Positions = (Warehouse SF × Efficiency) ÷ SF per Position',
+            `= (${fmtNum(wSF,0)} × ${fmtPct(efficiency)}) ÷ ${palletSF} = ${fmtNum(floorPositions,0)}`,
+            `Total Positions = ${fmtNum(floorPositions,0)} × ${stackingLevels} = ${fmtNum(totalPositions,0)}`,
+          ]);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         19  COMMISSION SPLIT
+         Splits total commission across the producing broker (Your Split),
+         the company (Internal Split), and an optional referral/co-broker.
+         All percentages must total 100%.
+      ---------------------------------------------------------- */
+      commission: {
+        num: '19', label: 'Commission Split',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="cs_total">Total Commission ($)</label>
+              <input type="number" id="cs_total" placeholder="e.g. 25000" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="cs_broker">Your Split (%)</label>
+              <input type="number" id="cs_broker" placeholder="e.g. 50" min="0" max="100" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="cs_company">Internal Split (%)</label>
+              <input type="number" id="cs_company" placeholder="e.g. 40" min="0" max="100" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="cs_referral">Referral / Co-Broker Split (%)</label>
+              <input type="number" id="cs_referral" placeholder="e.g. 10" min="0" max="100" step="0.01" />
+              <span class="helper">Leave blank if not applicable.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const total    = val('cs_total');
+          const broker   = val('cs_broker');
+          const company  = val('cs_company');
+          const referral = isNaN(val('cs_referral')) ? 0 : val('cs_referral');
+          if (isNaN(total) || isNaN(broker) || isNaN(company)) { showError('Total Commission, Your Split, and Internal Split are required.'); return; }
+          const sumPct = broker + company + referral;
+          if (Math.abs(sumPct - 100) > 0.01) {
+            showError(`Split percentages must total 100%. Currently: ${fmtNum(sumPct, 2)}%`);
+            return;
+          }
+          const brokerAmt   = total * (broker   / 100);
+          const companyAmt  = total * (company  / 100);
+          const referralAmt = total * (referral / 100);
+          const rows = [
+            { label: 'Total Commission',                    value: fmtCurrency(total) },
+            { label: `Your Split (${fmtPct(broker,0)})`,   value: fmtCurrency(brokerAmt), primary: true },
+            { label: `Internal Split (${fmtPct(company,0)})`, value: fmtCurrency(companyAmt) },
+          ];
+          if (referral > 0) rows.push({ label: `Referral / Co-Broker (${fmtPct(referral,0)})`, value: fmtCurrency(referralAmt) });
+          showResult(rows, [
+            'Party Amount = Total × Split %',
+            `Your Split: ${fmtCurrency(total)} × ${fmtPct(broker)} = ${fmtCurrency(brokerAmt)}`,
+            `Internal: ${fmtCurrency(total)} × ${fmtPct(company)} = ${fmtCurrency(companyAmt)}`,
+            referral > 0 ? `Referral: ${fmtCurrency(total)} × ${fmtPct(referral)} = ${fmtCurrency(referralAmt)}` : '',
+          ].filter(Boolean));
+        }
+      },
+
+      /* ----------------------------------------------------------
+         20  BREAK-EVEN OCCUPANCY
+         Minimum occupancy needed to cover all fixed lease costs.
+         Contribution per SF = Revenue per SF − Rent per SF
+         Break-Even SF = Fixed Costs / Contribution per SF
+      ---------------------------------------------------------- */
+      breakEven: {
+        num: '20', label: 'Break-Even Occupancy',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="be_totalSF">Total Rentable SF</label>
+              <input type="number" id="be_totalSF" placeholder="e.g. 10000" min="0" />
+            </div>
+            <div class="field">
+              <label for="be_rate">Rent Rate ($ / SF / Year)</label>
+              <input type="number" id="be_rate" placeholder="e.g. 24.00" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="be_fixedCosts">Annual Fixed Occupancy Costs ($)</label>
+              <input type="number" id="be_fixedCosts" placeholder="e.g. 180000" min="0" />
+              <span class="helper">Base rent + NNN + utilities + all fixed costs.</span>
+            </div>
+            <div class="field">
+              <label for="be_revPerSF">Revenue per SF ($ / Year)</label>
+              <input type="number" id="be_revPerSF" placeholder="e.g. 200" min="0" step="0.01" />
+              <span class="helper">Annual revenue generated per occupied SF.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const totalSF    = val('be_totalSF');
+          const rate       = val('be_rate');
+          const fixedCosts = val('be_fixedCosts');
+          const revPerSF   = val('be_revPerSF');
+          if (isNaN(totalSF) || isNaN(rate) || isNaN(fixedCosts) || isNaN(revPerSF)) { showError('All fields are required.'); return; }
+          if (revPerSF <= rate) { showError('Revenue per SF must exceed the rent rate for a viable break-even.'); return; }
+          const contribution = revPerSF - rate;
+          const breakEvenSF  = fixedCosts / contribution;
+          const breakEvenPct = (breakEvenSF / totalSF) * 100;
+          showResult([
+            { label: 'Total Location SF',         value: fmtNum(totalSF, 0) + ' SF' },
+            { label: 'Annual Base Rent',          value: fmtCurrency(totalSF * rate) },
+            { label: 'Contribution / SF',         value: fmtCurrency(contribution) + ' / SF' },
+            { label: 'Break-Even Square Footage', value: fmtNum(breakEvenSF, 0) + ' SF', primary: true },
+            { label: 'Break-Even Occupancy Rate', value: fmtPct(breakEvenPct), primary: true },
+          ], [
+            'Break-Even SF = Fixed Costs ÷ (Revenue/SF − Rent/SF)',
+            `Contribution = ${fmtCurrency(revPerSF)} − ${fmtCurrency(rate)} = ${fmtCurrency(contribution)} / SF`,
+            `Break-Even SF = ${fmtCurrency(fixedCosts)} ÷ ${fmtCurrency(contribution)} = ${fmtNum(breakEvenSF,0)} SF`,
+            `Break-Even Rate = ${fmtNum(breakEvenSF,0)} ÷ ${fmtNum(totalSF,0)} = ${fmtPct(breakEvenPct)}`,
+          ]);
+        }
+      },
+
+      /* ----------------------------------------------------------
+         21  TOTAL OCCUPANCY COST
+         Full-picture monthly and annual occupancy cost across all line items.
+         Outputs total cost per SF for benchmarking against market.
+      ---------------------------------------------------------- */
+      annualizedCost: {
+        num: '21', label: 'Total Occupancy Cost',
+        html: `
+          <div class="field-grid">
+            <div class="field">
+              <label for="oc_rsf">Rentable Square Feet (RSF)</label>
+              <input type="number" id="oc_rsf" placeholder="e.g. 5000" min="0" />
+            </div>
+            <div class="field">
+              <label for="oc_rate">Base Rent ($ / SF / Year)</label>
+              <input type="number" id="oc_rate" placeholder="e.g. 24.00" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="oc_nnn">NNN / OPEX ($ / SF / Year)</label>
+              <input type="number" id="oc_nnn" placeholder="e.g. 8.50" min="0" step="0.01" />
+              <span class="helper">Enter 0 for gross leases.</span>
+            </div>
+            <div class="field">
+              <label for="oc_parking">Monthly Parking ($)</label>
+              <input type="number" id="oc_parking" placeholder="e.g. 500" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="oc_utilities">Monthly Utilities ($)</label>
+              <input type="number" id="oc_utilities" placeholder="e.g. 300" min="0" step="0.01" />
+              <span class="helper">If not included in base rent or NNN.</span>
+            </div>
+            <div class="field">
+              <label for="oc_other">Other Monthly Costs ($)</label>
+              <input type="number" id="oc_other" placeholder="e.g. 0" min="0" step="0.01" />
+              <span class="helper">Janitorial, security, signage, etc.</span>
+            </div>
+          </div>`,
+        calculate() {
+          const rsf       = val('oc_rsf');
+          const rate      = val('oc_rate');
+          const nnn       = isNaN(val('oc_nnn'))       ? 0 : val('oc_nnn');
+          const parking   = isNaN(val('oc_parking'))   ? 0 : val('oc_parking');
+          const utilities = isNaN(val('oc_utilities')) ? 0 : val('oc_utilities');
+          const other     = isNaN(val('oc_other'))     ? 0 : val('oc_other');
+          if (isNaN(rsf) || isNaN(rate)) { showError('RSF and Base Rent are required.'); return; }
+          const mBase  = rsf * rate / 12;
+          const mNNN   = rsf * nnn  / 12;
+          const mTotal = mBase + mNNN + parking + utilities + other;
+          const aTotal = mTotal * 12;
+          showResult([
+            { label: 'Monthly Base Rent',            value: fmtCurrency(mBase) },
+            { label: 'Monthly NNN / OPEX',           value: fmtCurrency(mNNN) },
+            { label: 'Monthly Parking',              value: fmtCurrency(parking) },
+            { label: 'Monthly Utilities',            value: fmtCurrency(utilities) },
+            { label: 'Other Monthly Costs',          value: fmtCurrency(other) },
+            { label: 'Total Monthly Occupancy Cost', value: fmtCurrency(mTotal), primary: true },
+            { label: 'Total Annual Occupancy Cost',  value: fmtCurrency(aTotal), primary: true },
+            { label: 'Total Cost / SF / Year',       value: fmtCurrency(aTotal / rsf) + ' / SF' },
+          ], [
+            'Total Monthly = Base + NNN + Parking + Utilities + Other',
+            `= ${fmtCurrency(mBase)} + ${fmtCurrency(mNNN)} + ${fmtCurrency(parking)} + ${fmtCurrency(utilities)} + ${fmtCurrency(other)}`,
+            `= ${fmtCurrency(mTotal)} / month | ${fmtCurrency(aTotal)} / year`,
+            `Cost / SF = ${fmtCurrency(aTotal)} ÷ ${fmtNum(rsf,0)} = ${fmtCurrency(aTotal/rsf)} / SF / Yr`,
+          ]);
+        }
+      },
+
+    }; // end CALCS
+
+    /* ============================================================
+       LOAD & RENDER CALCULATOR
+    ============================================================ */
+    function loadCalc() {
+      const key   = document.getElementById('calcSelect').value;
+      const panel = document.getElementById('calcPanel');
+
+      if (!key) {
+        panel.innerHTML = `
+          <div class="placeholder-msg">
+            <div class="placeholder-icon">▣</div>
+            <p>Select a calculation above to begin.</p>
+          </div>`;
+        return;
+      }
+
+      const calc = CALCS[key];
+      if (!calc) return;
+
+      panel.innerHTML = `
+        <div class="calc-card">
+          <div class="calc-header">
+            <span class="calc-number">${calc.num}</span>
+            <span class="calc-name">${calc.label}</span>
+          </div>
+          <div class="calc-body">
+            ${calc.html}
+            <div class="error-box" id="errorBox"></div>
+            <div class="btn-row">
+              <button class="btn-calc" onclick="runCalc()">Calculate</button>
+              <button class="btn-clear" onclick="clearCalc()">Clear</button>
+            </div>
+            <div class="result-box" id="resultBox">
+              <div class="result-header">
+                <span>Result</span>
+                <span style="font-size:10px;color:var(--stone);">${calc.label}</span>
+              </div>
+              <div class="result-body">
+                <div class="result-rows" id="resultRows"></div>
+                <div class="formula-block">
+                  <div class="formula-label">Formula Used</div>
+                  <div class="formula-text" id="formulaText"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      // Run post-render init if defined (e.g. toggle event listeners)
+      if (typeof calc.init === 'function') calc.init();
+    }
+
+    /* ============================================================
+       RUN CALCULATION
+    ============================================================ */
+    function runCalc() {
+      const key = document.getElementById('calcSelect').value;
+      if (!key) return;
+      clearError();
+      clearResult();
+      CALCS[key].calculate();
+    }
+
+    /* ============================================================
+       CLEAR FIELDS
+    ============================================================ */
+    function clearCalc() {
+      document.querySelectorAll('#calcPanel input[type="number"]').forEach(el => el.value = '');
+      clearError();
+      clearResult();
+    }
+
+    /* ============================================================
+       ENTER KEY → CALCULATE
+    ============================================================ */
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        const key = document.getElementById('calcSelect').value;
+        if (key) runCalc();
+      }
+    });
+
+  </script>
+</body>
+</html>
