@@ -6,31 +6,31 @@
   xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
   xsi:type="MailApp">
 
-  <Id>9d7f0b5b-9d57-4f2d-91d7-2e4a4f9b1111</Id>
+  <Id>2f3c6e1a-8b45-4c2f-9f4a-1f7e5b4d8a21</Id>
   <Version>1.0.0.0</Version>
   <ProviderName>TSG National</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="CRE Calculator" />
-  <Description DefaultValue="Commercial real estate calculator tools for tenant representation." />
+  <DisplayName DefaultValue="CRE Calculator"/>
+  <Description DefaultValue="Commercial real estate calculator tools for tenant representation."/>
 
-  <IconUrl DefaultValue="https://vanessawillis.github.io/crecalculator/icon-32.png" />
-  <HighResolutionIconUrl DefaultValue="https://vanessawillis.github.io/crecalculator/icon-80.png" />
-  <SupportUrl DefaultValue="https://vanessawillis.github.io/crecalculator/" />
+  <IconUrl DefaultValue="https://vanessawillis.github.io/crecalculator/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://vanessawillis.github.io/crecalculator/icon-80.png"/>
+  <SupportUrl DefaultValue="https://vanessawillis.github.io/crecalculator/"/>
 
   <Hosts>
-    <Host Name="Mailbox" />
+    <Host Name="Mailbox"/>
   </Hosts>
 
   <Requirements>
     <Sets>
-      <Set Name="Mailbox" MinVersion="1.1" />
+      <Set Name="Mailbox" MinVersion="1.1"/>
     </Sets>
   </Requirements>
 
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://vanessawillis.github.io/crecalculator/" />
+        <SourceLocation DefaultValue="https://vanessawillis.github.io/crecalculator/"/>
         <RequestedHeight>650</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -39,7 +39,7 @@
   <Permissions>ReadItem</Permissions>
 
   <Rule xsi:type="RuleCollection" Mode="Or">
-    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read" />
+    <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
   </Rule>
 
   <DisableEntityHighlighting>false</DisableEntityHighlighting>
@@ -51,54 +51,50 @@
     <Hosts>
       <Host xsi:type="MailHost">
         <DesktopFormFactor>
-          <FunctionFile resid="functionFile" />
-
           <ExtensionPoint xsi:type="MessageReadCommandSurface">
             <OfficeTab id="TabDefault">
-              <Group id="creCalculatorGroup">
-                <Label resid="groupLabel" />
-                <Control xsi:type="Button" id="openCRECalculator">
-                  <Label resid="buttonLabel" />
+              <Group id="msgReadGroup">
+                <Label resid="groupLabel"/>
+                <Control xsi:type="Button" id="msgReadOpenPaneButton">
+                  <Label resid="buttonLabel"/>
                   <Supertip>
-                    <Title resid="buttonLabel" />
-                    <Description resid="buttonDescription" />
+                    <Title resid="buttonLabel"/>
+                    <Description resid="buttonDescription"/>
                   </Supertip>
                   <Icon>
-                    <bt:Image size="16" resid="icon16" />
-                    <bt:Image size="32" resid="icon32" />
-                    <bt:Image size="80" resid="icon80" />
+                    <bt:Image size="16" resid="icon16"/>
+                    <bt:Image size="32" resid="icon32"/>
+                    <bt:Image size="80" resid="icon80"/>
                   </Icon>
                   <Action xsi:type="ShowTaskpane">
-                    <SourceLocation resid="taskpaneUrl" />
+                    <SourceLocation resid="taskpaneUrl"/>
                   </Action>
                 </Control>
               </Group>
             </OfficeTab>
           </ExtensionPoint>
-
         </DesktopFormFactor>
       </Host>
     </Hosts>
 
     <Resources>
       <bt:Images>
-        <bt:Image id="icon16" DefaultValue="https://vanessawillis.github.io/crecalculator/icon-16.png" />
-        <bt:Image id="icon32" DefaultValue="https://vanessawillis.github.io/crecalculator/icon-32.png" />
-        <bt:Image id="icon80" DefaultValue="https://vanessawillis.github.io/crecalculator/icon-80.png" />
+        <bt:Image id="icon16" DefaultValue="https://vanessawillis.github.io/crecalculator/icon-16.png"/>
+        <bt:Image id="icon32" DefaultValue="https://vanessawillis.github.io/crecalculator/icon-32.png"/>
+        <bt:Image id="icon80" DefaultValue="https://vanessawillis.github.io/crecalculator/icon-80.png"/>
       </bt:Images>
 
       <bt:Urls>
-        <bt:Url id="functionFile" DefaultValue="https://vanessawillis.github.io/crecalculator/" />
-        <bt:Url id="taskpaneUrl" DefaultValue="https://vanessawillis.github.io/crecalculator/" />
+        <bt:Url id="taskpaneUrl" DefaultValue="https://vanessawillis.github.io/crecalculator/"/>
       </bt:Urls>
 
       <bt:ShortStrings>
-        <bt:String id="groupLabel" DefaultValue="CRE Tools" />
-        <bt:String id="buttonLabel" DefaultValue="CRE Calculator" />
+        <bt:String id="groupLabel" DefaultValue="CRE Tools"/>
+        <bt:String id="buttonLabel" DefaultValue="CRE Calculator"/>
       </bt:ShortStrings>
 
       <bt:LongStrings>
-        <bt:String id="buttonDescription" DefaultValue="Open commercial real estate calculator tools." />
+        <bt:String id="buttonDescription" DefaultValue="Open CRE calculator tools."/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
